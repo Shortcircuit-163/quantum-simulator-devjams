@@ -6,13 +6,22 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import random
 
+# Aesthetic settings
+BG_COLOR = "#2E2E2E"
+FG_COLOR = "#FFFFFF"
+GATE_COLOR = "#5F9EA0"
+CONTROL_COLOR = "#E9967A"
+MEASURE_COLOR = "#98FB98"
+BUTTON_BG = "#4A4A4A"
+BUTTON_FG = "#FFFFFF"
+FONT_FAMILY = "Helvetica"
+FONT_SIZE_NORMAL = 10
+FONT_SIZE_BOLD = 12
+
 CELL_WIDTH = 80
 CELL_HEIGHT = 50
-GATE_COLOR = "#87CEFA"
-CONTROL_COLOR = "#FF6347"
-MEASURE_COLOR = "#90EE90"   # light green for measurement
 TEXT_COLOR = "black"
-GATE_SPACING = 30  # spacing between gates
+GATE_SPACING = 30
 
 class Circuit:
     def __init__(self, n_qubits):
@@ -77,6 +86,7 @@ class QuantumGUI:
         self.root = root
         self.circuit = circuit
         self.root.title("Quantum Circuit Simulator")
+        self.root.configure(bg=BG_COLOR)
 
         # Zoom scale factor
         self.scale = 1.0
@@ -86,12 +96,12 @@ class QuantumGUI:
         self.screen_height = root.winfo_screenheight()
 
         # Toolbox
-        self.toolbox_frame = tk.Frame(root)
+        self.toolbox_frame = tk.Frame(root, bg=BG_COLOR)
         self.toolbox_frame.grid(row=0, column=0, padx=10, pady=10, sticky="w")
         self.create_toolbox()
 
         # Scrollable canvas
-        self.canvas_frame = tk.Frame(root)
+        self.canvas_frame = tk.Frame(root, bg=BG_COLOR)
         self.canvas_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
         self.canvas = tk.Canvas(self.canvas_frame, bg="white", width=800, height=circuit.n * CELL_HEIGHT + 100)
@@ -103,35 +113,22 @@ class QuantumGUI:
         self.canvas.config(xscrollcommand=self.hbar.set, yscrollcommand=self.vbar.set)
 
         # Controls
-        self.control_frame = tk.Frame(root)
+        self.control_frame = tk.Frame(root, bg=BG_COLOR)
         self.control_frame.grid(row=2, column=0, pady=10, sticky="w")
-
-        self.prev_button = tk.Button(self.control_frame, text="Previous Gate", command=self.prev_gate)
-        self.prev_button.grid(row=0, column=0, padx=5)
-
-        self.next_button = tk.Button(self.control_frame, text="Next Gate", command=self.next_gate)
-        self.next_button.grid(row=0, column=1, padx=5)
-
-        self.reset_button = tk.Button(self.control_frame, text="Reset", command=self.reset_circuit)
-        self.reset_button.grid(row=0, column=2, padx=5)
-
-        # Zoom controls
-        self.zoom_in_button = tk.Button(self.control_frame, text="Zoom In (+)", command=self.zoom_in)
-        self.zoom_in_button.grid(row=0, column=3, padx=5)
-
-        self.zoom_out_button = tk.Button(self.control_frame, text="Zoom Out (-)", command=self.zoom_out)
-        self.zoom_out_button.grid(row=0, column=4, padx=5)
-
-        self.zoom_reset_button = tk.Button(self.control_frame, text="Reset Zoom", command=self.reset_zoom)
-        self.zoom_reset_button.grid(row=0, column=5, padx=5)
+        self.create_control_buttons()
 
         # Probability visualization
-        self.fig, self.ax = plt.subplots(figsize=(6,2))
+        self.fig, self.ax = plt.subplots(figsize=(6,2), facecolor=BG_COLOR)
+        self.ax.tick_params(colors=FG_COLOR)
+        self.ax.spines['bottom'].set_color(FG_COLOR)
+        self.ax.spines['top'].set_color(FG_COLOR)
+        self.ax.spines['left'].set_color(FG_COLOR)
+        self.ax.spines['right'].set_color(FG_COLOR)
         self.prob_canvas = FigureCanvasTkAgg(self.fig, master=root)
         self.prob_canvas.get_tk_widget().grid(row=3, column=0)
 
         # Measurement results label
-        self.measure_label = tk.Label(root, text="Measurements: None")
+        self.measure_label = tk.Label(root, text="Measurements: None", bg=BG_COLOR, fg=FG_COLOR, font=(FONT_FAMILY, FONT_SIZE_NORMAL))
         self.measure_label.grid(row=4, column=0, pady=10)
 
         self.update_canvas()
@@ -139,7 +136,22 @@ class QuantumGUI:
     def create_toolbox(self):
         gates = ["H", "X", "Y", "Z", "CNOT", "TOFFOLI", "MEASURE"]
         for i, g in enumerate(gates):
-            b = tk.Button(self.toolbox_frame, text=g, width=8, command=lambda gate=g: self.add_gate_gui(gate))
+            b = tk.Button(self.toolbox_frame, text=g, width=8, command=lambda gate=g: self.add_gate_gui(gate),
+                          bg=BUTTON_BG, fg=BUTTON_FG, font=(FONT_FAMILY, FONT_SIZE_NORMAL))
+            b.grid(row=0, column=i, padx=5)
+
+    def create_control_buttons(self):
+        buttons = [
+            ("Previous Gate", self.prev_gate),
+            ("Next Gate", self.next_gate),
+            ("Reset", self.reset_circuit),
+            ("Zoom In (+)", self.zoom_in),
+            ("Zoom Out (-)", self.zoom_out),
+            ("Reset Zoom", self.reset_zoom)
+        ]
+        for i, (text, command) in enumerate(buttons):
+            b = tk.Button(self.control_frame, text=text, command=command,
+                          bg=BUTTON_BG, fg=BUTTON_FG, font=(FONT_FAMILY, FONT_SIZE_NORMAL))
             b.grid(row=0, column=i, padx=5)
 
     def add_gate_gui(self, gate):
@@ -174,6 +186,7 @@ class QuantumGUI:
 
     def update_canvas(self):
         self.canvas.delete("all")
+        self.canvas.configure(bg=BG_COLOR)
         n = self.circuit.n
 
         # Apply scaling
@@ -200,7 +213,7 @@ class QuantumGUI:
         # Draw wires
         for i in range(n):
             y = int((30 + i * CELL_HEIGHT) * self.scale)
-            self.canvas.create_line(50*self.scale, y, sw - 50*self.scale, y, width=2)
+            self.canvas.create_line(50*self.scale, y, sw - 50*self.scale, y, width=2, fill=FG_COLOR)
 
         # Draw gates
         for col, gate_info in enumerate(self.circuit.diagram):
@@ -216,7 +229,7 @@ class QuantumGUI:
             if controls and targets:
                 y1 = int((30 + min(controls + targets) * CELL_HEIGHT) * self.scale)
                 y2 = int((30 + max(controls + targets) * CELL_HEIGHT) * self.scale)
-                self.canvas.create_line(x+20*self.scale, y1, x+20*self.scale, y2, width=2)
+                self.canvas.create_line(x+20*self.scale, y1, x+20*self.scale, y2, width=2, fill=FG_COLOR)
 
             for t in targets:
                 y = int((30 + t * CELL_HEIGHT) * self.scale)
@@ -225,13 +238,13 @@ class QuantumGUI:
                                                  x+45*self.scale, y+15*self.scale,
                                                  fill=MEASURE_COLOR, outline="black", width=2)
                     self.canvas.create_text(x+15*self.scale, y, text="M",
-                                            font=("Arial", int(10*self.scale), "bold"))
+                                            font=(FONT_FAMILY, int(FONT_SIZE_BOLD*self.scale), "bold"))
                 else:
                     self.canvas.create_rectangle(x-15*self.scale, y-15*self.scale,
                                                  x+45*self.scale, y+15*self.scale,
                                                  fill=GATE_COLOR, outline="black", width=2)
                     self.canvas.create_text(x+15*self.scale, y, text=gate,
-                                            font=("Arial", int(10*self.scale), "bold"))
+                                            font=(FONT_FAMILY, int(FONT_SIZE_BOLD*self.scale), "bold"))
 
         self.update_probabilities()
         self.update_measurements()
@@ -239,10 +252,12 @@ class QuantumGUI:
     def update_probabilities(self):
         self.ax.clear()
         probs = np.abs(self.circuit.state.flatten())**2
-        self.ax.bar(range(len(probs)), probs)
+        self.ax.bar(range(len(probs)), probs, color=GATE_COLOR)
         self.ax.set_ylim(0,1)
-        self.ax.set_ylabel("Probability")
-        self.ax.set_xlabel("Basis state")
+        self.ax.set_ylabel("Probability", color=FG_COLOR)
+        self.ax.set_xlabel("Basis state", color=FG_COLOR)
+        self.ax.set_facecolor(BG_COLOR)
+        self.fig.patch.set_facecolor(BG_COLOR)
         self.prob_canvas.draw()
 
     def update_measurements(self):
@@ -290,15 +305,23 @@ class QuantumGUI:
         self.update_canvas()
 
 
-def start_quantum_gui(n_qubits):
+def start_quantum_gui(parent, n_qubits):
     circuit = Circuit(n_qubits)
-    root = tk.Tk()
-    gui = QuantumGUI(root, circuit)
-    root.mainloop()
+    new_win = tk.Toplevel(parent)
+    gui = QuantumGUI(new_win, circuit)
+
+def start_quantum_gui_with_bell_state(parent, n_qubits):
+    circuit = Circuit(n_qubits)
+    circuit.add_gate("H", targets=[0])
+    circuit.add_gate("CNOT", targets=[1], controls=[0])
+    new_win = tk.Toplevel(parent)
+    gui = QuantumGUI(new_win, circuit)
 
 if __name__ == "__main__":
     # This part is for standalone execution, e.g., for testing
     # You can set a default number of qubits here if you want to run it directly
+    root = tk.Tk()
     n_qubits = simpledialog.askinteger("Qubits", "Enter the number of qubits:", initialvalue=2)
     if n_qubits:
-        start_quantum_gui(n_qubits)
+        start_quantum_gui(root, n_qubits)
+    root.mainloop()

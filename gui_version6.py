@@ -211,7 +211,7 @@ class QuantumGUI:
         n = self.circuit.n
 
         # Apply scaling
-        sw = int((len(self.circuit.diagram) * (CELL_WIDTH + GATE_SPACING) + 100) * self.scale)
+        sw = int((len(self.circuit.diagram) * (CELL_WIDTH + GATE_SPACING) + 200) * self.scale)
         sh = int((n * CELL_HEIGHT + 100) * self.scale)
 
         # Scrollbars control
@@ -255,14 +255,14 @@ class QuantumGUI:
             for t in targets:
                 y = int((30 + t * CELL_HEIGHT) * self.scale)
                 if gate == "MEASURE":
-                    self.canvas.create_rectangle(x-15*self.scale, y-15*self.scale,
-                                                 x+45*self.scale, y+15*self.scale,
+                    self.canvas.create_rectangle(x-20*self.scale, y-15*self.scale,
+                                                 x+55*self.scale, y+15*self.scale,
                                                  fill=MEASURE_COLOR, outline="black", width=2)
                     self.canvas.create_text(x+15*self.scale, y, text="M",
-                                            font=(FONT_FAMILY, int(FONT_SIZE_BOLD*self.scale), "bold"))
+                                            font=(FONT_FAMILY, int((FONT_SIZE_BOLD)*self.scale), "bold"))
                 else:
-                    self.canvas.create_rectangle(x-15*self.scale, y-15*self.scale,
-                                                 x+45*self.scale, y+15*self.scale,
+                    self.canvas.create_rectangle(x-20*self.scale, y-15*self.scale,
+                                                 x+55*self.scale, y+15*self.scale,
                                                  fill=GATE_COLOR, outline="black", width=2)
                     self.canvas.create_text(x+15*self.scale, y, text=gate,
                                             font=(FONT_FAMILY, int(FONT_SIZE_BOLD*self.scale), "bold"))

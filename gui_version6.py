@@ -18,7 +18,7 @@ FONT_FAMILY = "Helvetica"
 FONT_SIZE_NORMAL = 10
 FONT_SIZE_BOLD = 12
 
-CELL_WIDTH = 80
+CELL_WIDTH = 90
 CELL_HEIGHT = 50
 TEXT_COLOR = "black"
 GATE_SPACING = 30
@@ -177,10 +177,10 @@ class QuantumGUI:
         self.update_canvas()
 
     def ask_qubit(self, prompt):
-        answer = simpledialog.askinteger("Input", prompt)
+        answer = simpledialog.askinteger("Input", prompt, parent=self.root)
         n = self.circuit.n
         if answer is None or not (0 <= answer < n):
-            messagebox.showwarning("Invalid Input", f"Please enter a number between 0 and {n-1}")
+            messagebox.showwarning("Invalid Input", f"Please enter a number between 0 and {n-1}", parent=self.root)
             return None
         return answer
 
@@ -194,11 +194,12 @@ class QuantumGUI:
         sh = int((n * CELL_HEIGHT + 100) * self.scale)
 
         # Scrollbars control
-        if sw < self.screen_width - 100:
+        MAX_INITIAL_WIDTH = 1000
+        if sw < MAX_INITIAL_WIDTH:
             self.canvas.config(width=sw)
             self.hbar.pack_forget()
         else:
-            self.canvas.config(width=self.screen_width - 100)
+            self.canvas.config(width=MAX_INITIAL_WIDTH)
             self.hbar.pack(side="bottom", fill="x")
             self.canvas.config(scrollregion=(0, 0, sw, sh))
 

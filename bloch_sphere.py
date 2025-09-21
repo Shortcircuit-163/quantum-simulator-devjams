@@ -32,8 +32,8 @@ def draw_bloch(ax, vector=[0,0,1], title="Bloch Sphere"):
     ax.set_box_aspect([1,1,1])
     ax.axis("off")
 
-def show_two_spheres():
-    new_win = tk.Toplevel(root)
+def show_two_spheres(parent):
+    new_win = tk.Toplevel(parent)
     new_win.title("Two Bloch Spheres")
 
     fig = Figure(figsize=(8,4))
@@ -47,11 +47,11 @@ def show_two_spheres():
     canvas.draw()
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-# Main window
-root = tk.Tk()
-root.title("Bloch Sphere GUI")
+if __name__ == '__main__':
+    root = tk.Tk()
+    root.title("Bloch Sphere GUI")
 
-btn = tk.Button(root, text="Show Two Bloch Spheres", command=show_two_spheres)
-btn.pack(pady=20)
+    btn = tk.Button(root, text="Show Two Bloch Spheres", command=lambda: show_two_spheres(root))
+    btn.pack(pady=20)
 
-root.mainloop()
+    root.mainloop()

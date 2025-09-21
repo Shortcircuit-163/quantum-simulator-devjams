@@ -2,7 +2,6 @@
 import numpy as np
 
 
-n = int(input("Enter the number of qubits: "))
 # Basic single-qubit states
 zero = np.array([[1.0], [0.0]], dtype=complex)
 one  = np.array([[0.0], [1.0]], dtype=complex)
@@ -19,7 +18,6 @@ def zero_state(n):
     for _ in range(n-1):
         state = np.kron(state, zero)
     return state
-zero_state(n)
 
 # Tensor (Kronecker) product helper for lists
 def kron_list(matrices):
@@ -113,20 +111,3 @@ def measure(state, n_shots=1):
             counts[c] = counts.get(c, 0) + 1
         return counts
 
-# Small demo: create Bell state
-if __name__ == "__main__":
-
-    # start |00>
-    s = zero_state(n)
-    # Apply H to qubit 0 (leftmost)
-    s = apply_single_qubit_gate(s, H, target_qubit=0, n_qubits=n)
-    # Apply CNOT with control 0 and target 1
-    for i in range(1,n):
-        U_cnot = cnot_on_n_qubits(control=0, target=i, n_qubits=n)
-        s = U_cnot @ s
-    s = normalize(s)
-    print("Bell state vector:\n", s)
-    print("Probabilities:", np.abs(s.flatten())**2)
-    # Measure once
-    outcome, collapsed = measure(s)
-    print("Measurement outcome:", outcome)

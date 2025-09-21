@@ -1,7 +1,7 @@
 import numpy as np
 import tkinter as tk
 from tkinter import messagebox, simpledialog
-from Basic_1 import zero_state, apply_single_qubit_gate, cnot_on_n_qubits, toffoli_on_n_qubits, H, X, Y, Z, n
+from Basic_1 import zero_state, apply_single_qubit_gate, cnot_on_n_qubits, toffoli_on_n_qubits, H, X, Y, Z
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import random
@@ -290,8 +290,15 @@ class QuantumGUI:
         self.update_canvas()
 
 
-if __name__ == "__main__":
-    circuit = Circuit(n)
+def start_quantum_gui(n_qubits):
+    circuit = Circuit(n_qubits)
     root = tk.Tk()
     gui = QuantumGUI(root, circuit)
     root.mainloop()
+
+if __name__ == "__main__":
+    # This part is for standalone execution, e.g., for testing
+    # You can set a default number of qubits here if you want to run it directly
+    n_qubits = simpledialog.askinteger("Qubits", "Enter the number of qubits:", initialvalue=2)
+    if n_qubits:
+        start_quantum_gui(n_qubits)

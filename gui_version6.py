@@ -81,24 +81,6 @@ class Circuit:
         self.measurements = {}
 
 
-class CustomIntegerDialog(simpledialog.Dialog):
-    def __init__(self, parent, title, prompt):
-        self.prompt = prompt
-        super().__init__(parent, title)
-
-    def body(self, master):
-        label = tk.Label(master, text=self.prompt)
-        label.pack(pady=5, padx=5)
-        self.entry = tk.Entry(master)
-        self.entry.pack(pady=5, padx=5)
-        return self.entry
-
-    def apply(self):
-        try:
-            self.result = int(self.entry.get())
-        except ValueError:
-            self.result = None
-
 class QuantumGUI:
     def __init__(self, root, circuit: Circuit):
         self.root = root
@@ -119,10 +101,10 @@ class QuantumGUI:
         self.create_toolbox()
 
         # Scrollable canvas
-        self.canvas_frame = tk.Frame(root, bg=BG_COLOR)
+        self.canvas_frame = tk.Frame(root, bg=BG_COLOR, highlightbackground="red", highlightthickness=2)
         self.canvas_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
-        self.canvas = tk.Canvas(self.canvas_frame, bg="white", width=800, height=circuit.n * CELL_HEIGHT + 100)
+        self.canvas = tk.Canvas(self.canvas_frame, bg=BG_COLOR, width=800, height=circuit.n * CELL_HEIGHT + 100)
         self.canvas.pack(side="left", fill="both", expand=True)
 
         # Scrollbars
@@ -195,15 +177,47 @@ class QuantumGUI:
         self.update_canvas()
 
     def ask_qubit(self, prompt):
-        dialog = CustomIntegerDialog(parent=self.root, title="Input", prompt=prompt)
-        answer = dialog.result
-        n = self.circuit.n
-        if answer is None or not (0 <= answer < n):
-            # The custom dialog doesn't show a warning on its own for invalid int
-            if answer is not None: # only show if they entered something non-numeric
-                 messagebox.showwarning("Invalid Input", f"Please enter a number between 0 and {n-1}", parent=self.root)
-            return None
-        return answer
+        result = [None]
+
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Input")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        label = tk.Label(dialog, text=prompt)
+        label.pack(pady=10, padx=10)
+        entry = tk.Entry(dialog)
+        entry.pack(pady=5, padx=10)
+        entry.focus_set()
+
+        def on_ok():
+            try:
+                val = int(entry.get())
+                n = self.circuit.n
+                if 0 <= val < n:
+                    result[0] = val
+                    dialog.destroy()
+                else:
+                    messagebox.showerror("Error", f"Input must be between 0 and {n-1}", parent=dialog)
+            except ValueError:
+                messagebox.showerror("Error", "Invalid input. Please enter an integer.", parent=dialog)
+
+        def on_cancel():
+            dialog.destroy()
+
+        button_frame = tk.Frame(dialog)
+        button_frame.pack(pady=10)
+        ok_button = tk.Button(button_frame, text="OK", command=on_ok)
+        ok_button.pack(side="left", padx=5)
+        cancel_button = tk.Button(button_frame, text="Cancel", command=on_cancel)
+        cancel_button.pack(side="left", padx=5)
+
+        dialog.bind("<Return>", lambda event: on_ok())
+        dialog.bind("<Escape>", lambda event: on_cancel())
+
+        self.root.wait_window(dialog)
+
+        return result[0]
 
     def update_canvas(self):
         self.canvas.delete("all")
@@ -211,7 +225,7 @@ class QuantumGUI:
         n = self.circuit.n
 
         # Apply scaling
-        sw = int((len(self.circuit.diagram) * (CELL_WIDTH + GATE_SPACING) + 200) * self.scale)
+        sw = int((len(self.circuit.diagram) * (CELL_WIDTH + GATE_SPACING) + 100) * self.scale)
         sh = int((n * CELL_HEIGHT + 100) * self.scale)
 
         # Scrollbars control
@@ -255,14 +269,14 @@ class QuantumGUI:
             for t in targets:
                 y = int((30 + t * CELL_HEIGHT) * self.scale)
                 if gate == "MEASURE":
-                    self.canvas.create_rectangle(x-20*self.scale, y-15*self.scale,
-                                                 x+55*self.scale, y+15*self.scale,
+                    self.canvas.create_rectangle(x-15*self.scale, y-15*self.scale,
+                                                 x+45*self.scale, y+15*self.scale,
                                                  fill=MEASURE_COLOR, outline="black", width=2)
                     self.canvas.create_text(x+15*self.scale, y, text="M",
-                                            font=(FONT_FAMILY, int((FONT_SIZE_BOLD)*self.scale), "bold"))
+                                            font=(FONT_FAMILY, int(FONT_SIZE_BOLD*self.scale), "bold"))
                 else:
-                    self.canvas.create_rectangle(x-20*self.scale, y-15*self.scale,
-                                                 x+55*self.scale, y+15*self.scale,
+                    self.canvas.create_rectangle(x-15*self.scale, y-15*self.scale,
+                                                 x+45*self.scale, y+15*self.scale,
                                                  fill=GATE_COLOR, outline="black", width=2)
                     self.canvas.create_text(x+15*self.scale, y, text=gate,
                                             font=(FONT_FAMILY, int(FONT_SIZE_BOLD*self.scale), "bold"))

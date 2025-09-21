@@ -18,7 +18,7 @@ FONT_FAMILY = "Helvetica"
 FONT_SIZE_NORMAL = 10
 FONT_SIZE_BOLD = 12
 
-CELL_WIDTH = 90
+CELL_WIDTH = 110
 CELL_HEIGHT = 50
 TEXT_COLOR = "black"
 GATE_SPACING = 30
@@ -80,6 +80,24 @@ class Circuit:
         self.step_index = -1
         self.measurements = {}
 
+
+class CustomIntegerDialog(simpledialog.Dialog):
+    def __init__(self, parent, title, prompt):
+        self.prompt = prompt
+        super().__init__(parent, title)
+
+    def body(self, master):
+        label = tk.Label(master, text=self.prompt)
+        label.pack(pady=5, padx=5)
+        self.entry = tk.Entry(master)
+        self.entry.pack(pady=5, padx=5)
+        return self.entry
+
+    def apply(self):
+        try:
+            self.result = int(self.entry.get())
+        except ValueError:
+            self.result = None
 
 class QuantumGUI:
     def __init__(self, root, circuit: Circuit):
@@ -177,10 +195,13 @@ class QuantumGUI:
         self.update_canvas()
 
     def ask_qubit(self, prompt):
-        answer = simpledialog.askinteger("Input", prompt, parent=self.root)
+        dialog = CustomIntegerDialog(parent=self.root, title="Input", prompt=prompt)
+        answer = dialog.result
         n = self.circuit.n
         if answer is None or not (0 <= answer < n):
-            messagebox.showwarning("Invalid Input", f"Please enter a number between 0 and {n-1}", parent=self.root)
+            # The custom dialog doesn't show a warning on its own for invalid int
+            if answer is not None: # only show if they entered something non-numeric
+                 messagebox.showwarning("Invalid Input", f"Please enter a number between 0 and {n-1}", parent=self.root)
             return None
         return answer
 
@@ -195,13 +216,12 @@ class QuantumGUI:
 
         # Scrollbars control
         MAX_INITIAL_WIDTH = 1000
-        if sw < MAX_INITIAL_WIDTH:
-            self.canvas.config(width=sw)
-            self.hbar.pack_forget()
-        else:
-            self.canvas.config(width=MAX_INITIAL_WIDTH)
+        self.canvas.config(width=MAX_INITIAL_WIDTH)
+        if sw > MAX_INITIAL_WIDTH:
             self.hbar.pack(side="bottom", fill="x")
-            self.canvas.config(scrollregion=(0, 0, sw, sh))
+        else:
+            self.hbar.pack_forget()
+        self.canvas.config(scrollregion=(0, 0, sw, sh))
 
         if sh < self.screen_height - 200:
             self.canvas.config(height=sh)
